@@ -106,6 +106,29 @@ for each Character in Game->characterList:
 
 A null `Character + 0x14C` means that character is not occupying a vehicle. A vehicle with no matching character is empty.
 
+### Stationary turret
+
+Stationary turrets use a distinct runtime type and the same occupant link as
+vehicles.
+
+| Offset or RVA | Type | Function |
+|---:|---|---|
+| `0x003AA650` | vtable RVA | `Turret` runtime-type discriminator |
+| `Turret - 0x0004` | `TurretClass*` | Turret class-definition pointer |
+| `Turret + 0x0148` | `Vec3` | Turret world position |
+| `0x003AA720` | vtable RVA | `TurretClass` runtime-type discriminator |
+
+Turret occupant/team lookup:
+
+```text
+for each Character in Game->characterList:
+    if Character + 0x14C == Turret*:
+        Character + 0x134 -> occupant team ID
+```
+
+A turret with no matching character is empty. Team ownership for an empty
+turret is not established by the occupant link.
+
 ## `Team`
 
 | Offset | Type | Function |

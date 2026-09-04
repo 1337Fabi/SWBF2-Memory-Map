@@ -129,6 +129,11 @@ A null `Character + 0x14C` means that character is not occupying a vehicle. A ve
 |---:|---|---|
 | `0x00C8` | `PlayerController*` | Player controller |
 | `0x0148` | `Vec3` | Eye position |
+| `0x0154` | `Vec3` | Native aim-trace endpoint in world space |
+| `0x0164` | `Entity*` | Entity intersected by the native reticle trace; null when no entity is hit |
+| `0x0168` | `uint32_t` | Reticle-hit type/value; observed as `0x88` for an enemy entity |
+| `0x0174` | `Entity*` | Mirrored native reticle-target entity pointer |
+| `0x0178` | `uint32_t` | Mirrored reticle-hit type/value |
 | `0x0200` | `EntityClass*` | Entity class |
 | `0x029C` | `Vec3` | Velocity |
 | `0x02A8` | `float` | Body/Y rotation component |

@@ -147,6 +147,21 @@ A null `Character + 0x14C` means that character is not occupying a vehicle. A ve
 | `0x094C` | `CollisionMesh*` | Collision mesh |
 | `0x0A88` | `CollisionMesh*` | Additional conditional collision mesh |
 
+### Droideka runtime entity
+
+The Droideka uses a vehicle-like runtime entity and does not expose the normal
+soldier pose/statistics path. Its runtime type is identified by vtable RVA
+`0x0039B0AC` relative to `BattlefrontII.exe`.
+
+| Offset | Type | Function |
+|---:|---|---|
+| `0x0030` | `uint32_t` | Runtime form flags; `(value & 0x0C) != 0` identifies rolling form |
+| `0x0148` | `Vec3` | Runtime world/aim position used when the standard soldier path is unavailable |
+| `0x0200` | `void*` | Droideka-specific class/runtime definition; not a standard `EntityClass` |
+
+The normal `Entity + 0x02E4`, `+0x0510`, and `+0x078C` paths can be null for
+this entity type and must not be required for Droideka detection.
+
 ## `Stats` — size `0xE0`
 
 | Offset | Type | Function |

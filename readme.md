@@ -129,6 +129,25 @@ for each Character in Game->characterList:
 A turret with no matching character is empty. Team ownership for an empty
 turret is not established by the occupant link.
 
+## CTF flag objects
+
+| Offset or RVA | Type | Function |
+|---:|---|---|
+| `0x0039CF2C` | vtable RVA | `FlagItem` runtime-type discriminator |
+| `FlagItem + 0x00CC` | `Character*` | Current flag carrier; null while not carried |
+| `FlagItem + 0x0148` | `Vec3` | Flag world position |
+
+Carrier lookup:
+
+```text
+carrier = *(Character**)(FlagItem + 0xCC)
+```
+
+While a flag is carried, the reverse attachment is available at
+`carrier + 0x14C` and points to the same `FlagItem`. Test the attached object's
+vtable against RVA `0x0039CF2C` to distinguish a carried flag from a vehicle or
+another attachment.
+
 ## `Team`
 
 | Offset | Type | Function |

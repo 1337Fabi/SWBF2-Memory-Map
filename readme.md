@@ -184,6 +184,7 @@ another attachment.
 | `0x04E0` | `Weapon*` | Primary weapon |
 | `0x04E4` | `Weapon*` | Secondary weapon |
 | `0x04E8` | `Weapon*` | Utility weapon |
+| `0x0500` | `uint8_t` | Selected weapon-slot index (`0` = primary, `1` = secondary) |
 | `0x0504` | `int32_t` | In-air state |
 | `0x0508` | `int32_t` | On-ground state |
 | `0x0510` | `void*` | High-resolution pose workspace |
@@ -208,6 +209,33 @@ soldier pose/statistics path. Its runtime type is identified by vtable RVA
 
 The normal `Entity + 0x02E4`, `+0x0510`, and `+0x078C` paths can be null for
 this entity type and must not be required for Droideka detection.
+
+## `Weapon`
+
+| Offset or RVA | Type | Function |
+|---:|---|---|
+| `Weapon + 0x0060` | `WeaponClass*` | Weapon-class definition |
+| `0x003B057C` | vtable RVA | Common firearm weapon instance |
+| `0x003B12A4` | vtable RVA | Launcher weapon instance |
+| `0x003B1988` | vtable RVA | Fusion-cutter weapon instance |
+
+## `WeaponClass`
+
+| Offset or RVA | Type | Function |
+|---:|---|---|
+| `WeaponClass + 0x0030` | inline `char[]` | Internal weapon-class name |
+| `0x003B0674` | vtable RVA | Common firearm class definition |
+| `0x003B139C` | vtable RVA | Launcher class definition |
+| `0x003B1950` | vtable RVA | Fusion-cutter class definition |
+
+Current equipped weapon:
+
+```text
+slotIndex = *(uint8_t*)(Entity + 0x500)
+weapon    = *(Weapon**)(Entity + 0x4E0 + slotIndex * 4)
+class     = *(WeaponClass**)(weapon + 0x60)
+name      = (char*)(class + 0x30)
+```
 
 ## `Stats` — size `0xE0`
 

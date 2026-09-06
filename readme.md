@@ -237,6 +237,44 @@ class     = *(WeaponClass**)(weapon + 0x60)
 name      = (char*)(class + 0x30)
 ```
 
+## Ordnance and projectiles
+
+Live rockets, grenades, mines, and detonation packs derive from the common
+`Ordnance` runtime object. Ordnance instances are allocated from a recycled
+pool; an address or old payload must not be treated as active unless its
+current vtable and list membership are valid.
+
+| Offset | Type | Function |
+|---:|---|---|
+| `0x0000` | vtable pointer | Current ordnance subtype discriminator |
+| `0x0004` | list node | Embedded ordnance-list node |
+| `0x0008` | pointer | Next ordnance-list node |
+| `0x000C` | pointer | Previous ordnance-list node |
+| `0x0030` | `OrdnanceClass*` | Current projectile/ordnance class definition |
+| `0x0048` | `Vec3` | Current world position |
+| `0x0054` | pointer | Owner trace representation (`owner Entity* - 0x240`) |
+| `0x005C` | `Character*` | Owning character |
+| `0x0068` | `int32_t` | Owning team ID |
+
+Observed subtype vtable RVAs:
+
+| Vtable RVA | Runtime type |
+|---:|---|
+| `0x003AC710` | `OrdnanceBullet` |
+| `0x003ACAE8` | `OrdnanceGrenade` |
+| `0x003ACE84` | `OrdnanceMissile` |
+| `0x003AD0F4` | `OrdnanceSticky` |
+
+The owner entity can be reconstructed as:
+
+```text
+ownerEntity = *(Ordnance + 0x54) + 0x240
+```
+
+Validate that result against the owning character's live `Entity*` before
+using it. The embedded ordnance list is distinct from the soldier/vehicle
+world-object list.
+
 ## `Stats` — size `0xE0`
 
 | Offset | Type | Function |

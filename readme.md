@@ -9,6 +9,7 @@ Executable addresses are relative virtual addresses (RVAs) from the runtime
 |---:|---|---|
 | `0x1A30324` | `Game*` | Global game object |
 | `0x1B9AE5C` | `SpawnDisplay*` | Global class-selection display object |
+| `0x1B99338` | `OrdnanceManager*` | Global active-ordnance manager |
 | `0x1BAC0E0` | inline `wchar_t[]` | Local-player name string |
 | `0x1B3A5D4` | inline `wchar_t[]` | Alternate local-player name string |
 
@@ -265,14 +266,28 @@ Observed subtype vtable RVAs:
 | `0x003ACE84` | `OrdnanceMissile` |
 | `0x003AD0F4` | `OrdnanceSticky` |
 
+Active-ordnance list resolution:
+
+```text
+manager    = *(BattlefrontII + 0x1B99338)
+descriptor = *(manager + 0x08)
+sentinel   = descriptor + 0x0C
+firstNode  = *(descriptor + 0x10)
+lastNode   = *(descriptor + 0x14)
+liveCount  = *(uint32_t*)(descriptor + 0x20)
+
+for node = firstNode; node != sentinel; node = *(node + 0x04):
+    ordnance = node - 0x04
+```
+
 The owner entity can be reconstructed as:
 
 ```text
 ownerEntity = *(Ordnance + 0x54) + 0x240
 ```
 
-Validate that result against the owning character's live `Entity*` before
-using it. The embedded ordnance list is distinct from the soldier/vehicle
+Validate the current subtype vtable and owner relationship before using an
+entry. The embedded ordnance list is distinct from the soldier/vehicle
 world-object list.
 
 ## `Stats` — size `0xE0`

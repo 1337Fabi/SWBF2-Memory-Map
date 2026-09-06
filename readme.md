@@ -179,7 +179,7 @@ another attachment.
 | `0x0178` | `uint32_t` | Mirrored reticle-hit type/value |
 | `0x0200` | `EntityClass*` | Entity class |
 | `0x029C` | `Vec3` | Velocity |
-| `0x02A8` | `float` | Body/Y rotation component |
+| `0x02A8` | `float` | Local aiming pitch; observed clamp approximately `-0.8` to `+1.1` |
 | `0x02D8` | `Aimer*` | Aimer object |
 | `0x02E4` | `Stats*` | Statistics and world-position object |
 | `0x04E0` | `Weapon*` | Primary weapon |
@@ -263,8 +263,13 @@ Observed subtype vtable RVAs:
 |---:|---|
 | `0x003AC710` | `OrdnanceBullet` |
 | `0x003ACAE8` | `OrdnanceGrenade` |
+| `0x003ACCCC` | `OrdnanceLaser` |
 | `0x003ACE84` | `OrdnanceMissile` |
 | `0x003AD0F4` | `OrdnanceSticky` |
+
+`OrdnanceLaserClass` uses vtable RVA `0x003ACD0C`. Sniper-rifle shots were
+observed as one or more short-lived `OrdnanceLaser` entries rather than
+`OrdnanceBullet` objects.
 
 Active-ordnance list resolution:
 
@@ -306,7 +311,7 @@ world-object list.
 
 | Offset | Type | Function |
 |---:|---|---|
-| `0x0048` | `Vec3` | Aim rotation |
+| `0x0048` | `Vec3` | Normalized world-space firing direction |
 
 ## High-resolution skeleton
 

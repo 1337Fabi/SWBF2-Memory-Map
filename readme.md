@@ -358,6 +358,21 @@ SoldierAnimatorLowRes + 0x30 -> Matrix4x4 bone array
 bone stride = 0x40
 ```
 
+## HUD hit-reticle element
+
+The HUD elements named `hud_main_reticule_hit` and `player1reticule_hit` use
+runtime type `HUD::ElementModel3D` with vtable RVA `0x003A136C`.
+
+| Offset | Type | Function |
+|---:|---|---|
+| `0x00A4` | `uint32_t` | Headshot presentation selector; observed `2` for headshot and `0` otherwise |
+| `0x00A8` | `uint32_t` | Reticle presentation state; observed `1` for headshot and `4` for normal/inactive |
+| `0x0114` | `uint32_t` | Presentation flags; observed `0x180` for headshot and `0x80` for normal/inactive |
+
+These fields describe the HUD presentation state. Body-hit and no-hit captures
+shared the same values, so they are not an authoritative general hit-result or
+damage-region record.
+
 ## `SpawnDisplay`
 
 ```text

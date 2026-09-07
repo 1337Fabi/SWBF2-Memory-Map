@@ -15,6 +15,9 @@ Executable addresses are relative virtual addresses (RVAs) from the runtime
 | `0x003F58E0` | `RedCamera**` | Active render-camera pointer |
 | `0x01A57400` | `LockOnManager*[]` | Native target-lock manager array |
 | `0x003EC590` | `OrdnanceClass` list head | Registered ordnance-class list |
+| `0x01A64F14` | `GalaxyAuthListener*` | Active Galaxy authentication listener |
+| `0x01A65030` | `uint8_t` | Authentication request-in-progress state |
+| `0x01A65038` | `int32_t` | Galaxy authentication result/error code; zero on the observed successful path |
 
 ## Internal functions and decisions
 
@@ -42,6 +45,19 @@ Executable addresses are relative virtual addresses (RVAs) from the runtime
 | `0x002552D0` | `TeamManager::GetObjectsInRange`; returns validated team-registered objects in a radius |
 | `0x002781B0` | `Weapon::Update` |
 | `0x00279350` | `Weapon::Render` implementation |
+| `0x0012EAB0` | Returns the active `SteamAuthProvider` |
+| `0x0012EB80` | `SteamAuthProvider::GetEncryptedAppTicket` |
+| `0x0012ED50` | `SteamAuthProvider::GetPersonaName` |
+| `0x0012EDB0` | Checks the Steam authentication-provider error state |
+| `0x0012EDA0` | Tests whether the Galaxy subsystem is initialized |
+| `0x0012EDD0` | Initializes the Galaxy subsystem |
+| `0x001D4610` | Returns the Galaxy authentication provider/interface |
+| `0x001D4B80` | Galaxy authentication-success callback |
+| `0x001D4C20` | Galaxy authentication-failure callback; stores its result code and stops the friends subsystem |
+| `0x001D4C40` | Galaxy authentication reset/cancellation callback |
+| `0x001D6160` | Initializes Galaxy listeners and starts ticket authentication when required |
+| `0x001D6288` | Dispatches the encrypted Steam application ticket to the Galaxy authentication interface |
+| `0x001D7DE0` | Allocates and registers a `GalaxyAuthListener` |
 
 `TraceLine` entity argument:
 
@@ -408,6 +424,32 @@ world-object list.
 | `0x0934` | `Entity*` | Forced target object |
 | `0x0938` | `uint32_t` | Saved handle ID for the forced target |
 | `0x0940` | `int32_t` | Force-lock state |
+
+## Galaxy authentication
+
+The Steam build authenticates to Galaxy with an encrypted Steam application
+ticket. The persona name is presentation data and is not the authentication
+credential.
+
+### `GalaxyAuthListener` — size `0x0C`
+
+| Offset | Type | Function |
+|---:|---|---|
+| `0x0000` | vtable pointer | Authentication-listener callbacks |
+| `0x0004` | state | Listener registration/state field |
+| `0x0008` | `int32_t` | Authentication-associated integer copied during listener construction |
+
+Authentication state interpretation:
+
+| Value | Meaning |
+|---:|---|
+| `*(uint8_t*)(BattlefrontII + 0x01A65030) != 0` | Authentication request is in progress |
+| `*(int32_t*)(BattlefrontII + 0x01A65038) == 0` | No failure code is stored |
+
+The request-in-progress byte is cleared by the success, failure, and reset
+callbacks. Persistent authenticated state is queried through the provider
+returned by RVA `0x001D4610`, using its virtual method at vtable offset
+`0x0004`.
 
 ## High-resolution skeleton
 

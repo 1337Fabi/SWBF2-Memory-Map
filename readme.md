@@ -12,6 +12,9 @@ Executable addresses are relative virtual addresses (RVAs) from the runtime
 | `0x1B99338` | `OrdnanceManager*` | Global active-ordnance manager |
 | `0x1BAC0E0` | inline `wchar_t[]` | Local-player name string |
 | `0x1B3A5D4` | inline `wchar_t[]` | Alternate local-player name string |
+| `0x003F58E0` | `RedCamera**` | Active render-camera pointer |
+| `0x01A57400` | `LockOnManager*[]` | Native target-lock manager array |
+| `0x003EC590` | `OrdnanceClass` list head | Registered ordnance-class list |
 
 ## Internal functions and decisions
 
@@ -24,6 +27,21 @@ Executable addresses are relative virtual addresses (RVAs) from the runtime
 | `0x0002A670` | Class-display activation wrapper; prepares state and calls the lower activation routine |
 | `0x000EFC84` | Tests control-point eligibility bit `0x02` at context offset `0x472` |
 | `0x000EFC8B` | Control-point class-selection rejection branch |
+| `0x0003D290` | `Aimer::SetSoldierInfo` |
+| `0x0005E3A0` | `CollisionManager::RayHit`; returns the hit fraction of the supplied maximum distance |
+| `0x00084310` | Returns the current `Weapon*` from a `Controllable` |
+| `0x000844A0` | Sets or clears a `Controllable`'s native locked-target object |
+| `0x00089340` | Applies a damage descriptor to a damageable object |
+| `0x00167A60` | Finds a named HUD mesh |
+| `0x00167AB0` | HUD name-tag/menu event-input handler |
+| `0x0018C655` | Loads the multiplayer spawn-delay value |
+| `0x0018C6F4` | Loads the team-specific multiplayer spawn-delay value |
+| `0x0021A2B0` | `PlayerController::Update` |
+| `0x00230650` | `ReticuleDisplay::Update` |
+| `0x002308F6` | Reticle widescreen-transform instruction region |
+| `0x002552D0` | `TeamManager::GetObjectsInRange`; returns validated team-registered objects in a radius |
+| `0x002781B0` | `Weapon::Update` |
+| `0x00279350` | `Weapon::Render` implementation |
 
 `TraceLine` entity argument:
 
@@ -107,6 +125,26 @@ for each Character in Game->characterList:
 
 A null `Character + 0x14C` means that character is not occupying a vehicle. A vehicle with no matching character is empty.
 
+### Flyer runtime fields
+
+| Offset | Type | Function |
+|---:|---|---|
+| `0x0564` | state/enum | Current flight state |
+| `0x0568` | `float` | Flight-state progress |
+| `0x062C` | `EntityFlyerClass*` | Flyer class definition |
+| `0x0630` | `PassengerSlot*[]` | Passenger-slot array |
+| `0x0640` | `MountedTurret*[8]` | Mounted-turret array |
+| `0x0660` | `uint8_t` | Mounted-turret count |
+| `0x0668` | `Aimer*[]` | Aimer array |
+| `0x1CD0` | pointer | Flyer sub-object vtable pointer |
+
+### Flyer class fields
+
+| Offset | Type | Function |
+|---:|---|---|
+| `0x0C80` | `int32_t` | Aimer count |
+| `0x0D4C` | `uint8_t` | Passenger-slot count |
+
 ### Stationary turret
 
 Stationary turrets use a distinct runtime type and the same occupant link as
@@ -178,6 +216,8 @@ another attachment.
 | `0x0174` | `Entity*` | Mirrored native reticle-target entity pointer |
 | `0x0178` | `uint32_t` | Mirrored reticle-hit type/value |
 | `0x0200` | `EntityClass*` | Entity class |
+| `0x0204` | `uint32_t` | Object-handle generation identifier |
+| `0x0234` | `uint32_t` | Team/type flags; the low four bits contain the team value |
 | `0x029C` | `Vec3` | Velocity |
 | `0x02A8` | `float` | Local aiming pitch; observed clamp approximately `-0.8` to `+1.1` |
 | `0x02D8` | `Aimer*` | Aimer object |
@@ -196,6 +236,17 @@ another attachment.
 | `0x094C` | `CollisionMesh*` | Collision mesh |
 | `0x0A88` | `CollisionMesh*` | Additional conditional collision mesh |
 
+### Collision-sphere lookup
+
+| Offset | Type | Function |
+|---:|---|---|
+| `0x0010` | pointer | Tree-grid collision-sphere stack |
+| `0x0014` | `int32_t` | Active collision-sphere stack index |
+| `0x0018` | `Vec3` | Inline collision-sphere position used when the stack is null |
+
+When the stack exists, the active collision-sphere position is located at
+`stack + (index + 4) * 0x10`.
+
 ### Droideka runtime entity
 
 The Droideka uses a vehicle-like runtime entity and does not expose the normal
@@ -207,6 +258,8 @@ soldier pose/statistics path. Its runtime type is identified by vtable RVA
 | `0x0030` | `uint32_t` | Runtime form flags; `(value & 0x0C) != 0` identifies rolling form |
 | `0x0148` | `Vec3` | Runtime world/aim position used when the standard soldier path is unavailable |
 | `0x0200` | `void*` | Droideka-specific class/runtime definition; not a standard `EntityClass` |
+| `0x0438` | `EntityDroidekaClass*` | Droideka class definition used by the rolling-state implementation |
+| `0x1A54` | state/enum | Detailed Droideka state used by pilot and state-transition routines |
 
 The normal `Entity + 0x02E4`, `+0x0510`, and `+0x078C` paths can be null for
 this entity type and must not be required for Droideka detection.
@@ -313,6 +366,49 @@ world-object list.
 |---:|---|---|
 | `0x0048` | `Vec3` | Normalized world-space firing direction |
 
+## `PlayerController`
+
+| Offset | Type | Function |
+|---:|---|---|
+| `0x0004` | `Controllable*` | Controlled object |
+
+## `Controllable`
+
+`Controllable` is embedded at `Entity + 0x240`.
+
+| Offset | Type | Function |
+|---:|---|---|
+| `0x0088` | `float` | Horizontal turn input/state |
+| `0x008C` | `float` | Vertical pitch input/state |
+| `0x00DC` | `Vec3` | Native aiming-ray origin |
+| `0x00E8` | `Vec3` | Native aiming direction |
+| `0x0138` | `Entity*` | Locked-target handle object |
+| `0x013C` | `uint32_t` | Locked-target saved handle ID |
+
+## Damageable object
+
+`Damageable` is embedded at `Entity + 0x140`.
+
+| Offset | Type | Function |
+|---:|---|---|
+| `0x0004` | `float` | Current health (`Entity + 0x144`) |
+
+### Damage descriptor
+
+| Offset | Type | Function |
+|---:|---|---|
+| `0x0004` | `Entity*` | Shooter/owner entity |
+
+## `LockOnManager`
+
+| Offset | Type | Function |
+|---:|---|---|
+| `0x0928` | `Entity*` | Target cleared by the native lock-reset path |
+| `0x092C` | `uint32_t` | Saved handle ID for the clear-target field |
+| `0x0934` | `Entity*` | Forced target object |
+| `0x0938` | `uint32_t` | Saved handle ID for the forced target |
+| `0x0940` | `int32_t` | Force-lock state |
+
 ## High-resolution skeleton
 
 ```text
@@ -372,6 +468,27 @@ runtime type `HUD::ElementModel3D` with vtable RVA `0x003A136C`.
 These fields describe the HUD presentation state. Body-hit and no-hit captures
 shared the same values, so they are not an authoritative general hit-result or
 damage-region record.
+
+### Hit-feedback signal path
+
+| RVA | Function |
+|---:|---|
+| `0x0015E3A0` | Registers the player/weapon HUD signal table |
+| `0x00160AB0` | Updates one weapon's HUD state |
+| `0x00161928` | Selects critical feedback when the greatest live hit value is greater than `1.0`; otherwise selects normal feedback |
+| `0x000530E4` | Updates the live hit-feedback value and its display timer |
+| `0x00053100` | Reads the decaying hit-feedback timer |
+| `0x00053130` | Reads the stored hit-feedback value |
+
+| RVA | Type | Function |
+|---:|---|---|
+| `0x01A56CF8` | HUD signal handle | `player1.weapon1.target.hit` |
+| `0x01A56CFC` | HUD signal handle | `player1.weapon1.target.hitCritical` |
+| `0x01A56D64` | HUD signal handle | `player1.weapon2.target.hit` |
+| `0x01A56D68` | HUD signal handle | `player1.weapon2.target.hitCritical` |
+
+The four global fields contain registered HUD signal handles, not persistent
+hit-result values.
 
 ## `SpawnDisplay`
 

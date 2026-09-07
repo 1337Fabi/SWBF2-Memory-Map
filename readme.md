@@ -431,6 +431,32 @@ The Steam build authenticates to Galaxy with an encrypted Steam application
 ticket. The persona name is presentation data and is not the authentication
 credential.
 
+### Globals
+
+| RVA | Type | Function |
+|---:|---|---|
+| `0x01A64F14` | `GalaxyAuthListener*` | Active Galaxy authentication listener |
+| `0x01A65030` | `uint8_t` | Authentication request-in-progress state |
+| `0x01A65038` | `int32_t` | Galaxy authentication result/error code; zero on the observed successful path |
+
+### Functions
+
+| RVA | Function |
+|---:|---|
+| `0x0012EAB0` | Returns the active `SteamAuthProvider` |
+| `0x0012EB80` | `SteamAuthProvider::GetEncryptedAppTicket` |
+| `0x0012ED50` | `SteamAuthProvider::GetPersonaName` |
+| `0x0012EDB0` | Checks the Steam authentication-provider error state |
+| `0x0012EDA0` | Tests whether the Galaxy subsystem is initialized |
+| `0x0012EDD0` | Initializes the Galaxy subsystem |
+| `0x001D4610` | Returns the Galaxy authentication provider/interface |
+| `0x001D4B80` | Galaxy authentication-success callback |
+| `0x001D4C20` | Galaxy authentication-failure callback; stores its result code and stops the friends subsystem |
+| `0x001D4C40` | Galaxy authentication reset/cancellation callback |
+| `0x001D6160` | Initializes Galaxy listeners and starts ticket authentication when required |
+| `0x001D6288` | Dispatches the encrypted Steam application ticket to the Galaxy authentication interface |
+| `0x001D7DE0` | Allocates and registers a `GalaxyAuthListener` |
+
 ### `GalaxyAuthListener` — size `0x0C`
 
 | Offset | Type | Function |
